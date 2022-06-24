@@ -45,12 +45,11 @@ class scene1 extends Phaser.Scene {
         this.physics.add.collider(this.player, this.platform, this.gameEnd, null, this);
         this.physics.add.collider(this.player, this.gapsGroup, this.scorePoint, null, this);
 
-        this.gameOverText = this.add.image(450, 150, 'gameover');
+        this.gameOverText = this.add.image(450, 225, 'gameover');
         this.gameOverText.visible = false;
-        this.restartButton = this.add.image(450, 225, 'restart');
-        this.restartButton.on('pointerdown', this.restartGame);
+        this.restartButton = this.add.image(450, 300, 'restart').setInteractive();
+        this.restartButton.on('pointerdown', this.restartGame, this);
         this.restartButton.visible = false;
-
     }
 
     update() {
@@ -96,7 +95,6 @@ class scene1 extends Phaser.Scene {
 
         const pillarY = Phaser.Math.Between(-50, -30);
 
-        console.log(pillarY);
         const gap = this.add.line(900, pillarY + 50, 0, 0, 0, 98);
         this.gapsGroup.add(gap);
         gap.body.allowGravity = false;
@@ -111,24 +109,32 @@ class scene1 extends Phaser.Scene {
             pillarBot.body.allowGravity = false;
         }
         this.rand = Phaser.Math.Between(1, 2);
-
     }
 
     gameEnd() {
         this.physics.pause();
         this.gameover = true;
+        this.player.setTint(0xff0000);
         this.restartButton.visible = true;
         this.gameOverText.visible = true;
     }
 
     restartGame() {
+        console.log("restarted");
         this.pillarGroup.clear(true, true);
         this.gapsGroup.clear(true, true);
         this.player.destroy();
         this.gameOverText.visible = false;
         this.restartButton.visible = false;
         this.physics.resume();
-        console.log("restarted");
+
+        this.pillarCount = 0;
+        this.gameover = false;
+        
+        this.player = this.physics.add.image(100, 225, 'player').setScale(0.15).refreshBody();
+        this.physics.add.collider(this.player, this.pillarGroup, this.gameEnd, null, this);
+        this.physics.add.collider(this.player, this.platform, this.gameEnd, null, this);
+        this.physics.add.collider(this.player, this.gapsGroup, this.scorePoint, null, this);
     }
 
     scorePoint() {
