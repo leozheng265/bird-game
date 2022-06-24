@@ -1,0 +1,11 @@
+{
+  "name": "bird",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "npm start"
+  },
+  "author": "Leo Zheng",
+  "license": "ISC"
+}
