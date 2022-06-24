@@ -4,12 +4,14 @@ class scene1 extends Phaser.Scene {
         this.gameover = false;
         this.lock = 0;
         this.pillarGroup;
-        this.gapsGroup;
         this.pillarCount = 0;
         this.gameOverText;
         this.restartButton;
         this.rand = 1;
         this.score = 0;
+        this.scoreLock = 0;
+        this.scoreText;
+        this.keyText;
     }
 
     preload() {
@@ -22,9 +24,6 @@ class scene1 extends Phaser.Scene {
         this.load.image('restart', 'assets/restart.png');
     }
 
-    /*
-     * Create game objects. 
-     */
     create() {
         this.platform = this.physics.add.staticGroup();
         this.platform.create(200, 450, 'ground').setScale(1.6).refreshBody();
@@ -36,28 +35,27 @@ class scene1 extends Phaser.Scene {
             this.player.setVelocityY(-150);
         }, this); 
         this.key_space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
         this.pillarGroup = this.physics.add.group();
-        this.gapsGroup = this.physics.add.group();
         this.createPillar();
 
         this.physics.add.collider(this.player, this.pillarGroup, this.gameEnd, null, this);
         this.physics.add.collider(this.player, this.platform, this.gameEnd, null, this);
-        this.physics.add.collider(this.player, this.gapsGroup, this.scorePoint, null, this);
 
         this.gameOverText = this.add.image(450, 225, 'gameover');
+        this.gameOverText.setDepth(20);
         this.gameOverText.visible = false;
+
         this.restartButton = this.add.image(450, 300, 'restart').setInteractive();
         this.restartButton.on('pointerdown', this.restartGame, this);
+        this.restartButton.setDepth(20);
         this.restartButton.visible = false;
+
+        this.scoreText = this.add.text(16, 16, 'Score: 0', {fontsize: '32px', fill: '#000'});
     }
 
     update() {
         if (this.gameover) {
             return ;
-        }
-        if(this.player.body.touching.down) {
-            this.gameover = false;
         }
         if(this.key_space.isDown && this.lock == 0) {
             this.player.setVelocityY(-150);
@@ -66,7 +64,6 @@ class scene1 extends Phaser.Scene {
         if(this.key_space.isUp) {
             this.lock = 0;
         }
-
         this.pillarGroup.children.iterate(function(child) {
             if(child == undefined) {
                 return;
@@ -75,17 +72,20 @@ class scene1 extends Phaser.Scene {
                 child.destroy();
             }
             else {
-                child.setVelocityX(-100);
+                child.setVelocityX(-150);
             }
-        });
-        this.gapsGroup.children.iterate(function(child) {
-            child.body.setVelocityX(-100);
-        });
+            if(child.x <= 100 && this.scoreLock === 0) {
+                this.scorePoint();
+                this.scoreLock = 1;
+            }
+        }, this);
         this.pillarCount++;
-        if(this.pillarCount === 250) {
+        if(this.pillarCount === 200) {
             this.createPillar();
             this.pillarCount = 0;
+            this.scoreLock = 0;
         }
+        
     }
 
     createPillar() {
@@ -94,11 +94,6 @@ class scene1 extends Phaser.Scene {
         }
 
         const pillarY = Phaser.Math.Between(-50, -30);
-
-        const gap = this.add.line(900, pillarY + 50, 0, 0, 0, 98);
-        this.gapsGroup.add(gap);
-        gap.body.allowGravity = false;
-        gap.visible = false;
 
         if(this.rand === 1) {
             const pillarTop = this.pillarGroup.create(900, pillarY, 'pillar_top').setScale(0.5).refreshBody();
@@ -120,9 +115,7 @@ class scene1 extends Phaser.Scene {
     }
 
     restartGame() {
-        console.log("restarted");
         this.pillarGroup.clear(true, true);
-        this.gapsGroup.clear(true, true);
         this.player.destroy();
         this.gameOverText.visible = false;
         this.restartButton.visible = false;
@@ -130,13 +123,16 @@ class scene1 extends Phaser.Scene {
 
         this.pillarCount = 0;
         this.gameover = false;
-        
+
         this.player = this.physics.add.image(100, 225, 'player').setScale(0.15).refreshBody();
         this.physics.add.collider(this.player, this.pillarGroup, this.gameEnd, null, this);
         this.physics.add.collider(this.player, this.platform, this.gameEnd, null, this);
-        this.physics.add.collider(this.player, this.gapsGroup, this.scorePoint, null, this);
+        this.player.setCollideWorldBounds(true);
     }
 
     scorePoint() {
+        this.score++;
+        this.scoreText.setText('Score: ' + this.score);
     }
+
 }
